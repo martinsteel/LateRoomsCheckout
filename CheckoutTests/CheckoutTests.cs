@@ -13,10 +13,10 @@ namespace CheckoutTests
         [SetUp]
         public void SetUp()
         {
-            // Set up mock product data. This would probably be in a DB.
+            // Set up mock product data. This would probably be in a DB in production.
             productRepository = new Mock<IProductRepository>();
-            productRepository.Setup(r => r.Get("A")).Returns(new Product { SKU = "A", UnitPrice = 50 });
-            productRepository.Setup(r => r.Get("B")).Returns(new Product { SKU = "B", UnitPrice = 30 });
+            productRepository.Setup(r => r.Get("A")).Returns(new Product { SKU = "A", UnitPrice = 50, SpecialPrice = 130, SpecialQuantity = 3 });
+            productRepository.Setup(r => r.Get("B")).Returns(new Product { SKU = "B", UnitPrice = 30, SpecialPrice =  45, SpecialQuantity = 2 });
             productRepository.Setup(r => r.Get("C")).Returns(new Product { SKU = "C", UnitPrice = 20 });
             productRepository.Setup(r => r.Get("D")).Returns(new Product { SKU = "D", UnitPrice = 15 });
         }
@@ -65,6 +65,31 @@ namespace CheckoutTests
             var scanResult = checkout.Scan("Z");
 
             Assert.That(scanResult, Is.False);
+        }
+
+        [Test]
+        public void Checkout_Total_Is_Zero_When_Nothing_Scanned()
+        {
+            var checkout = new Checkout(productRepository.Object);
+
+            var total = checkout.GetTotalPrice();
+
+            Assert.That(total, Is.Zero);
+        }
+
+        [Test]
+        public void Single_Product_Gets_Muilti_Buy_Discount()
+        {
+            var checkout = new Checkout(productRepository.Object);
+
+            // Product A should scan at 3 for 130 rather than 150 (3 * 50)
+            checkout.Scan("A");
+            checkout.Scan("A");
+            checkout.Scan("A");
+
+            var total = checkout.GetTotalPrice();
+
+            Assert.That(total, Is.EqualTo(130));
         }
     }
 }
