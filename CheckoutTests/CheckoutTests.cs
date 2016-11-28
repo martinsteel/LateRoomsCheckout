@@ -2,6 +2,8 @@ using LateRoomsCheckout;
 using Moq;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace CheckoutTests
 {
@@ -90,6 +92,45 @@ namespace CheckoutTests
             var total = checkout.GetTotalPrice();
 
             Assert.That(total, Is.EqualTo(130));
+        }
+
+        [Test]
+        public void Full_Price_Used_If_Not_Buying_Exact_Multiple_Of_Special_Quantity()
+        {
+            var checkout = new Checkout(productRepository.Object);
+
+            for (int i = 0; i < 7; i++)
+            {
+                checkout.Scan("B");
+            }
+            var total = checkout.GetTotalPrice();
+
+            // Product B is 30 or 2 for 45, so 7 items = 165 (3 * 45 + 1 * 30)
+            Assert.That(total, Is.EqualTo(165));
+        }
+
+        [Test]
+        public void Discount_Applied_For_Mix_Of_Products()
+        {
+            var checkout = new Checkout(productRepository.Object);
+
+            var items = new List<string> {"A", "A", "A", "A", "A", "B", "B", "B", "B", "C", "D", "D", "D", "D", "D", "D", "D"};
+
+            // Randomly sort items to make sure implementation doesn't rely on order.
+            var rng = new Random();
+            var shuffledItems = items.OrderBy(x => rng.Next()).ToList();
+
+            shuffledItems.ForEach(x => checkout.Scan(x));
+
+            var total = checkout.GetTotalPrice();
+
+            /* A (5): 1 * 130 + 2 * 50 (three discounted, 2 full price)
+             * B (4): 2 * 45 (all four discounted)
+             * C (1): 1 * 20
+             * D (7): 7 * 15
+             * Total: 445
+             */
+            Assert.That(total, Is.EqualTo(445));
         }
     }
 }
