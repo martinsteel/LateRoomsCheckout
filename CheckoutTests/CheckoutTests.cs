@@ -17,8 +17,8 @@ namespace CheckoutTests
             productRepository = new Mock<IProductRepository>();
             productRepository.Setup(r => r.Get("A")).Returns(new Product { SKU = "A", UnitPrice = 50 });
             productRepository.Setup(r => r.Get("B")).Returns(new Product { SKU = "B", UnitPrice = 30 });
-
-
+            productRepository.Setup(r => r.Get("C")).Returns(new Product { SKU = "C", UnitPrice = 20 });
+            productRepository.Setup(r => r.Get("D")).Returns(new Product { SKU = "D", UnitPrice = 15 });
         }
 
         [Test]
@@ -45,14 +45,16 @@ namespace CheckoutTests
         }
 
         [Test]
-        public void Can_Get_Correct_Price_For_Single_Item()
+        [TestCase("A", 50)]
+        [TestCase("D", 15)]
+        public void Can_Get_Correct_Price_For_Single_Item(string sku, int expectedPrice)
         {
             var checkout = new Checkout(productRepository.Object);
 
-            checkout.Scan("A");
+            checkout.Scan(sku);
             var total = checkout.GetTotalPrice();
 
-            Assert.That(total, Is.EqualTo(50));
+            Assert.That(total, Is.EqualTo(expectedPrice));
         }
 
         [Test]
@@ -61,6 +63,7 @@ namespace CheckoutTests
             var checkout = new Checkout(productRepository.Object);
 
             var scanResult = checkout.Scan("Z");
+
             Assert.That(scanResult, Is.False);
         }
     }
