@@ -19,10 +19,15 @@ namespace LateRoomsCheckout
             return _items.Sum(x => x.UnitPrice);
         }
 
-        public void Scan(string sku)
+        public bool Scan(string sku)
         {
             var product = _productRepository.Get(sku);
+
+            if (product == null)
+                return false;
+
             _items.Add(product);
+            return true;            
         }
     }
 }
