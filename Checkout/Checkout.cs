@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LateRoomsCheckout
 {
-    class Checkout : ICheckout
+    public class Checkout : ICheckout
     {
+        private List<string> _items = new List<string>();
+
         public int GetTotalPrice()
         {
             throw new NotImplementedException();
@@ -11,7 +14,7 @@ namespace LateRoomsCheckout
 
         public void Scan(string sku)
         {
-            throw new NotImplementedException();
+            _items.Add(sku);
         }
     }
 }
